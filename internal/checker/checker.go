@@ -1,7 +1,6 @@
 package checker
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 )
@@ -12,22 +11,20 @@ type CheckResult struct {
 	Err    error
 }
 
-func CheckURL(url string, results chan<- CheckResult) {
-	// Timeout court pour éviter de bloquer trop
+func CheckURL(url string) CheckResult {
 	client := http.Client{
 		Timeout: 3 * time.Second,
 	}
 	resp, err := client.Get(url)
 	if err != nil {
-		results <- CheckResult{
+		return CheckResult{
 			Target: url,
-			Err:    fmt.Errorf("Request failed: %w", err),
+			Err:    &UnreachableError{URL: url, Err: err},
 		}
-		return
 	}
 	defer resp.Body.Close()
 
-	results <- CheckResult{
+	return CheckResult{
 		Target: url,
 		Status: resp.Status,
 	}
